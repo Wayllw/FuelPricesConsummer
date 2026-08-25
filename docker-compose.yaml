@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------------
+  # PostgreSQL
+  # -------------------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: portfoliodb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  # -------------------------------------------------------------------
+  # MySQL
+  # -------------------------------------------------------------------
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_DATABASE: portfoliodb
+      MYSQL_ROOT_PASSWORD: adminpassword
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: adminpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: always
+
+  # -------------------------------------------------------------------
+  # Oracle Database Free (23c / 23ai Express)
+  # -------------------------------------------------------------------
+  oracle:
+    image: container-registry.oracle.com/database/free:latest
+    container_name: oracle_db
+    environment:
+      ORACLE_PWD: adminpassword
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+    restart: always
+
+volumes:
+  postgres_data:
+  mysql_data:
+  oracle_data:
