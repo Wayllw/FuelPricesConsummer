@@ -12,7 +12,7 @@ def fetch_data(url: str) -> list:
     """Extrai os dados da API pública."""
     response = requests.get(url)
     response.raise_for_status()  # Garante erro se a requisição falhar
-    return response.json()
+    return response.json()["data"]
 
 def main():
     # Etapa 2: Extrair dados e carregar no Pandas DataFrame
