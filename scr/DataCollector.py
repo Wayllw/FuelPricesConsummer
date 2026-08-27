@@ -2,9 +2,13 @@ import os
 import requests
 import pandas as pd
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # 1. Definir o endpoint da API e diretório de saída
-API_URL = "https://api.apiaberta.pt/v1/fuel/prices"
+API_URL = os.getenv("API_URL")
 OUTPUT_DIR = Path("../data")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 

@@ -1,19 +1,27 @@
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+postgres_url= os.getenv("DB_POSTGRES")
+mysql_url= os.getenv("DB_MYSQL")
+oracle_url= os.getenv("DB_ORACLE")
+
 
 def get_postgres_engine() -> Engine:
     """Retorna o engine de conexão para o PostgreSQL."""
     return create_engine(
-        "postgresql+psycopg2://admin:adminpassword@localhost:5432/portfoliodb"
+        postgres_url,
     )
 
 def get_mysql_engine():
     return create_engine(
-        "mysql+pymysql://admin:adminpassword@localhost:3306/portfoliodb",
+        mysql_url,
     )
 
 def get_oracle_engine() -> Engine:
     """Retorna o engine de conexão para o Oracle Database."""
     return create_engine(
-        "oracle+oracledb://SYSTEM:adminpassword@localhost:1521/?service_name=FREEPDB1"
+        oracle_url,
     )
