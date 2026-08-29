@@ -42,5 +42,5 @@ def main():
     df.to_parquet(parquet_path, index=False, engine="pyarrow")
     print(f"Arquivo Parquet salvo em: {parquet_path}")
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
