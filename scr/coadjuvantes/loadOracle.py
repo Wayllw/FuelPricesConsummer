@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from engines import get_oracle_engine
+from scr.coadjuvantes.engines import get_oracle_engine
 from sqlalchemy.types import  VARCHAR, BOOLEAN, DATE, TIMESTAMP
 from sqlalchemy.dialects.oracle import FLOAT, NUMBER
 

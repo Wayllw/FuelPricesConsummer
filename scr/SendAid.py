@@ -1,6 +1,4 @@
 import DataCollector
-import time
-
 
 def main():
     DataCollector.main()
