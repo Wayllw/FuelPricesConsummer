@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 data_path = glob.glob("../data/dados.*")
-data=datetime.datetime.now().strftime("%d%m%Y")
+data=datetime.datetime.now().strftime("%Y%m%d")
 
 aws_access_key= os.getenv("S3_ACCESS_KEY")
 aws_secret_key= os.getenv("S3_SECRET_KEY")

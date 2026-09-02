@@ -1,0 +1,11 @@
+FROM public.ecr.aws/lambda/python:3.10
+
+# Copia e instala as dependências
+COPY requirements.txt .
+RUN pip install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
+
+# Copia o código da função
+COPY app.py ${LAMBDA_TASK_ROOT}
+
+# Define o handler inicial
+CMD [ "app.lambda_handler" ]
