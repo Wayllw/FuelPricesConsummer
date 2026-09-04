@@ -1,0 +1,20 @@
+FROM public.ecr.aws/lambda/python:3.10
+
+# Install system build tools and image/compression development libraries
+RUN yum update -y && yum install -y gcc gcc-c++ make tar gzip shadow-utils zlib-devel libjpeg-turbo-devel
+
+# Copy and install dependencies
+COPY requirements.txt .
+
+# Install Rust toolchain (if required by your dependencies)
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Install Python dependencies into the Lambda task root
+RUN pip install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
+
+# Copy the function code
+COPY app.py ${LAMBDA_TASK_ROOT}
+
+# Set the handler
+CMD [ "app.lambda_handler" ]

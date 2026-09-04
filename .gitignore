@@ -1,2 +1,7 @@
 data
+.idea
 .env
+*.ps1
+.txt
+.py
+.png

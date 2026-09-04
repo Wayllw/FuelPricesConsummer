@@ -1,0 +1,14 @@
+curl_cffi>=0.6.0
+openpyxl
+dataframe_image
+boto3
+sqlalchemy
+psycopg2-binary
+pymysql
+python-dotenv
+pyarrow==15.0.0
+pandas==2.2.1
+matplotlib
+requests>=2.31.0
+certifi>=2023.7.22
+urllib3>=2.0.0
