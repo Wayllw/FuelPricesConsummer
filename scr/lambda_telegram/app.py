@@ -1,12 +1,32 @@
 import json
+import io
 import os
 import requests
 from sqlalchemy import create_engine, text
+import boto3
+import datetime
 
 DB_URL = os.getenv("RDS_DB_URL")
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-engine = create_engine(DB_URL, pool_pre_ping=True)
+aws_access_key= os.getenv("S3_ACCESS_KEY")
+aws_secret_key= os.getenv("S3_SECRET_KEY")
+aws_region_name= os.getenv("S3_REGION")
+aws_bucket_name= os.getenv("S3_BUCKET_NAME")
 
+engine = create_engine(DB_URL, pool_pre_ping=True)
+session = boto3.client(
+        service_name="s3",
+        region_name=aws_region_name,
+        aws_access_key_id=aws_access_key,
+        aws_secret_access_key=aws_secret_key,
+    )
+
+def get_latest_s3_image():
+    data = datetime.datetime.now().strftime("%Y%m%d")
+    s3_key = f"{data}/dados.png"
+    response = session.get_object(Bucket=aws_bucket_name, Key=s3_key)
+    # Retorna o buffer de memória com o conteúdo da imagem
+    return io.BytesIO(response['Body'].read())
 
 
 def save_user(chat_id, first_name, username):
@@ -32,19 +52,28 @@ def save_user(chat_id, first_name, username):
         conn.commit()
 
 
-def send_message(chat_id, text_to_send):
-    """Envia uma mensagem de texto para o utilizador via Telegram API."""
-    try:
-        text_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        payload = {
-            "chat_id": chat_id,
-            "text": text_to_send,
-            "parse_mode": "Markdown"
-        }
-        res = requests.post(text_url, json=payload, timeout=5)
-        print(f"Telegram API status: {res.status_code}")
-    except Exception as e:
-        print(f"Erro ao enviar mensagem no Telegram: {e}")
+def send_message(chat_id, text_to_send, photo_path=None):
+    if photo_path is None:
+        try:
+            text_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+            payload = {
+                "chat_id": chat_id,
+                "text": text_to_send,
+                "parse_mode": "Markdown"
+            }
+            res = requests.post(text_url, json=payload, timeout=5)
+            print(f"Telegram API status: {res.status_code}")
+        except Exception as e:
+            print(f"Erro ao enviar mensagem no Telegram: {e}")
+    elif photo_path is not None:
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
+        if isinstance(photo_path, io.BytesIO):
+            photo_path.seek(0)
+            files = {"photo": ("dados.png", photo_path, "image/png")}
+            requests.post(url, data={"chat_id": chat_id, "caption":text_to_send,"parse_mode": "Markdown" }, files=files, timeout=10)
+        else:
+            with open(photo_path, "rb") as photo:
+                requests.post (url, data={"chat_id": chat_id, "caption":text_to_send,"parse_mode": "Markdown" },files={"photo": photo})
 
 
 def lambda_handler(event, context):
@@ -70,13 +99,17 @@ def lambda_handler(event, context):
                 "xau": f"Até já {first_name}!👋 \nEspero que voltes rápido, vai com cuidado!",
                 "/start": f"Olá {first_name}! 👋 \nFicaste registado para receber os relatórios diários de combustíveis. \nFaz /help para obteres a lista de comandos.",
                 "/estado": "Estamos em desenvolvimento atualmente, esperamos trazer novas funcionalidades em breve.",
-                "/preço": "",
                 "/dono": "Olá. Chamo-me Rui. Se caíste aqui desamparado, este bot faz parte de um projeto pessoal de software development.",
-                "/help": "🤖 *Comandos disponíveis:*\n\n• /start — Regista o contacto no sistema\n• /estado — Consulta o estado do bot\n• /dono — Informações sobre o projeto\n• `ping` — Testa a resposta do bot\n• `pao` — Manteiga!\n• `ola`\n• `adeus ou xau`"
+                "/help": "🤖 *Comandos disponíveis:*\n\n• /start — Regista o contacto no sistema\n• /preco — Exibe os preços atuais dos combustíveis.\n•  /estado — Consulta o estado do bot\n• /dono — Informações sobre o projeto\n• `ping` — Testa a resposta do bot\n• `pao` — Manteiga!\n• `ola`\n• `adeus ou xau`"
             }
 
             # --- LÓGICA DE RESPOSTAS ESPECÍFICAS ---
-            if user_text in RESPOSTAS:
+            if user_text == "/preco":
+                send_message(chat_id,
+                            f"🚀 Bom dia {first_name}.\n\n*Estes são os preços de hoje.*",
+                            get_latest_s3_image()
+                            )
+            elif user_text in RESPOSTAS:
                 send_message(chat_id, RESPOSTAS[user_text])
             else:
                 # Resposta padrão caso ele diga algo não reconhecido
