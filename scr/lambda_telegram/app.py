@@ -24,10 +24,12 @@ session = boto3.client(
 def get_latest_s3_image():
     data = datetime.datetime.now().strftime("%Y%m%d")
     s3_key = f"{data}/dados.png"
-    response = session.get_object(Bucket=aws_bucket_name, Key=s3_key)
-    # Retorna o buffer de memória com o conteúdo da imagem
-    return io.BytesIO(response['Body'].read())
-
+    try:
+        response = session.get_object(Bucket=aws_bucket_name, Key=s3_key)
+        # Retorna o buffer de memória com o conteúdo da imagem
+        return io.BytesIO(response['Body'].read())
+    except Exception as e:
+        print(f"Erro na obtenção da imgaem. {e}")
 
 def save_user(chat_id, first_name, username):
     query = text(""" 
@@ -105,10 +107,16 @@ def lambda_handler(event, context):
 
             # --- LÓGICA DE RESPOSTAS ESPECÍFICAS ---
             if user_text == "/preco":
-                send_message(chat_id,
-                            f"🚀 Bom dia {first_name}.\n\n*Estes são os preços de hoje.*",
-                            get_latest_s3_image()
-                            )
+                try:
+                    send_message(chat_id,
+                                f"🚀 Bom dia {first_name}.\n\n*Estes são os preços de hoje.*",
+                                get_latest_s3_image()
+                                )
+                except Exception as e:
+                    send_message(chat_id,
+                                f"Infelizmente não conseguimos enviar os preços mais atualizados.\nAguarde enquanto verificamos o que aconteceu.*",
+                                )
+                    print("Não foi possivel enviar mensagem no Telegram.")
             elif user_text in RESPOSTAS:
                 send_message(chat_id, RESPOSTAS[user_text])
             else:

@@ -5,6 +5,7 @@ import certifi
 import json
 import datetime
 import boto3
+import time
 # import requests
 import pandas as pd
 from sqlalchemy import text,create_engine
@@ -49,11 +50,20 @@ ses_client = boto3.client('ses', region_name='eu-west-3')
 #         kwargs['ssl_context'] = context
 #         return super().init_poolmanager(*args, **kwargs)
 
-def fetch_data(url: str) -> list:
-    response = requests.get(url, impersonate="chrome", timeout=10)
-    response.raise_for_status()
+def fetch_data(url: str, retries: int = 3, delay: int = 5) -> list:
+    for attempt in range(retries):
+        response = requests.get(url, impersonate="chrome", timeout=15)
 
-    return response.json().get("data", [])
+        if response.status_code == 429:
+            print(f"Recebido HTTP 429. A aguardar {delay}s antes da tentativa {attempt + 1}/{retries}...")
+            time.sleep(delay)
+            delay *= 2  # Aumenta o tempo de espera exponencialmente
+            continue
+
+        response.raise_for_status()
+        return response.json().get("data", [])
+
+    raise Exception("Limite de pedidos atingido (HTTP 429) após múltiplas tentativas.")
 
 def upload(date, csv, excel, parquet, img):
     # Upload CSV
